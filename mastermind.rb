@@ -5,7 +5,7 @@ end
 class ComputerCodemaker
   include Validate
 
-  attr_reader :hidden_code, :colors_in_hidden_code
+  attr_reader :hidden_code
 
   def initialize
     # Randomly select an assortment of the possible colors to choose from to
@@ -13,10 +13,7 @@ class ComputerCodemaker
     @hidden_code = Array.new(4).map do
       POSSIBLE_COLORS.sample
     end
-    @colors_in_hidden_code = count_number_of_colors_in_hidden_code
   end
-
-  private
 
   def count_number_of_colors_in_hidden_code
     hidden_code.reduce(Hash.new(0)) do |colors_hash, color|
@@ -42,6 +39,7 @@ class PlayerCodebreaker
 
   def take_player_input
     puts "The possible choices are #{POSSIBLE_COLORS}"
+    puts "\n"
     puts 'Enter your guess (the name of the four colors, each separated by a space):'
     @player_guess = gets.chomp.split
   end
@@ -81,19 +79,43 @@ class GameLogic
 
     [exact_matches, correct_color_but_wrong_position]
   end
+
+  def play_game
+    player = PlayerCodebreaker.new
+    computer = ComputerCodemaker.new
+    hidden_code = computer.hidden_code
+    number_of_guesses = 12
+    player_has_won = false
+
+    number_of_guesses.times do |current_turn|
+      puts '--------------------------------------------------------------'
+      puts "\nTurn #{current_turn + 1}"
+      puts "\n"
+      player_guess = player.player_guess
+      colors_hash = computer.count_number_of_colors_in_hidden_code
+
+      feedback = compare_player_guess_with_code(player_guess, hidden_code, colors_hash)
+
+      puts "\n"
+      puts '==============================================================='
+      puts "Exact matches: #{feedback[0]}"
+      puts "Correct color, but wrong position: #{feedback[1]}"
+      puts '==============================================================='
+      puts "\n"
+
+      if feedback[0] == 4
+        puts 'You win!'
+        player_has_won = true
+        break
+      end
+    end
+
+    puts "You didn't crack the code!" unless player_has_won
+    puts "\n"
+    puts 'The hidden code was:'
+    p hidden_code
+  end
 end
 
-player = PlayerCodebreaker.new
-computer = ComputerCodemaker.new
-code = computer.hidden_code
-colors_in_code = computer.colors_in_hidden_code
-player = PlayerCodebreaker.new
-player_guess = player.player_guess
-puts "The code is #{code}"
-puts "\n"
-puts "The number of each color in the code is #{colors_in_code}"
-puts "\n"
-puts "Player guess is #{player_guess}"
-puts "\n"
-game = GameLogic.new
-p game.compare_player_guess_with_code(player_guess, code, colors_in_code)
+mastermind = GameLogic.new
+mastermind.play_game
