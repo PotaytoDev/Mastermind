@@ -75,6 +75,29 @@ class ComputerCodemaker
   end
 end
 
+class ComputerCodebreaker
+  attr_reader :computer_guess
+
+  def initialize
+    @computer_guess = Array.new(4)
+    @colors_to_check = Marshal.load(Marshal.dump(Validate::POSSIBLE_COLORS))
+    @colors_found = 0
+    @colors_in_code = {}
+  end
+
+  def make_guess
+    if @colors_to_check.length > 0 && @colors_found != 4
+      @computer_guess = @computer_guess.map do
+        @colors_to_check.first
+      end
+
+      @colors_to_check.shift
+    else
+      @computer_guess = %w[red blue green purple]
+    end
+  end
+end
+
 class PlayerCodebreaker
   include Validate
 
@@ -202,7 +225,23 @@ class GameLogic
 
   def play_game_as_codemaker
     player = PlayerCodemaker.new
+    computer = ComputerCodebreaker.new
+    number_of_guesses = 12
+    computer_has_won = false
     puts "\nThe hidden code you made is #{player.hidden_code}"
+
+    number_of_guesses.times do |current_turn|
+      sleep(3) unless current_turn.zero?
+      puts '--------------------------------------------------------------'
+      puts "\nTurn #{current_turn + 1}"
+      puts "\n"
+      computer.make_guess
+      computer_guess = computer.computer_guess
+      puts "Computer's guess is #{computer_guess}"
+    end
+
+    puts "\nThe hidden code was:"
+    p player.hidden_code
   end
 end
 
