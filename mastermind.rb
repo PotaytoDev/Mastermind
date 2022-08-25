@@ -88,7 +88,7 @@ class ComputerCodebreaker
 
       @colors_to_check.shift
     else
-      @computer_guess = %w[red blue green purple]
+      @computer_guess = colors_in_code.shuffle
     end
   end
 end
@@ -262,6 +262,11 @@ class GameLogic
 
       puts "The colors that are part of the code are #{computer.colors_in_code}"
       puts "The possible positions of each color are #{computer.possible_positions_of_colors}"
+
+      if feedback[0] == 4
+        puts "\nThe computer solved the code!"
+        break
+      end
     end
 
     puts "\nThe hidden code was:"
