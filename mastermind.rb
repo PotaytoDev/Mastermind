@@ -69,14 +69,15 @@ class ComputerCodemaker
 end
 
 class ComputerCodebreaker
-  attr_accessor :colors_in_code, :colors_found
+  attr_accessor :possible_positions_of_colors, :colors_found, :colors_in_code
   attr_reader :computer_guess
 
   def initialize
     @computer_guess = Array.new(4)
     @colors_to_check = Marshal.load(Marshal.dump(Validate::POSSIBLE_COLORS))
     @colors_found = 0
-    @colors_in_code = Hash.new(0)
+    @possible_positions_of_colors = Hash.new { |hash, key| hash[key] = [0, 1, 2, 3] }
+    @colors_in_code = []
   end
 
   def make_guess
@@ -253,12 +254,14 @@ class GameLogic
 
       if feedback[0] + feedback[1] != 0 && computer.colors_found < 4
         (feedback[0] + feedback[1]).times do
-          computer.colors_in_code[computer_guess.first] += 1
+          computer.colors_in_code.push(computer_guess.first)
           computer.colors_found += 1
+          computer.possible_positions_of_colors[computer_guess.first]
         end
       end
 
-      puts "Colors found in code so far are #{computer.colors_in_code}"
+      puts "The colors that are part of the code are #{computer.colors_in_code}"
+      puts "The possible positions of each color are #{computer.possible_positions_of_colors}"
     end
 
     puts "\nThe hidden code was:"
