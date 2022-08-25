@@ -66,23 +66,17 @@ class ComputerCodemaker
       POSSIBLE_COLORS.sample
     end
   end
-
-  def count_number_of_colors_in_hidden_code
-    hidden_code.reduce(Hash.new(0)) do |colors_hash, color|
-      colors_hash[color] += 1
-      colors_hash
-    end
-  end
 end
 
 class ComputerCodebreaker
+  attr_accessor :colors_in_code, :colors_found
   attr_reader :computer_guess
 
   def initialize
     @computer_guess = Array.new(4)
     @colors_to_check = Marshal.load(Marshal.dump(Validate::POSSIBLE_COLORS))
     @colors_found = 0
-    @colors_in_code = {}
+    @colors_in_code = Hash.new(0)
   end
 
   def make_guess
@@ -186,6 +180,13 @@ class GameLogic
     [exact_matches, correct_color_but_wrong_position]
   end
 
+  def count_number_of_colors_in_hidden_code(hidden_code)
+    hidden_code.reduce(Hash.new(0)) do |colors_hash, color|
+      colors_hash[color] += 1
+      colors_hash
+    end
+  end
+
   def play_game
     player = PlayerCodebreaker.new
     computer = ComputerCodemaker.new
@@ -198,7 +199,7 @@ class GameLogic
       puts "\nTurn #{current_turn + 1}"
       puts "\n"
       player_guess = player.player_guess
-      colors_hash = computer.count_number_of_colors_in_hidden_code
+      colors_hash = count_number_of_colors_in_hidden_code(hidden_code)
       puts "\nYour guess is: #{player_guess}"
 
       feedback = compare_player_guess_with_code(player_guess, hidden_code, colors_hash)
@@ -228,7 +229,8 @@ class GameLogic
     computer = ComputerCodebreaker.new
     number_of_guesses = 12
     computer_has_won = false
-    puts "\nThe hidden code you made is #{player.hidden_code}"
+    hidden_code = player.hidden_code
+    puts "\nThe hidden code you made is #{hidden_code}"
 
     number_of_guesses.times do |current_turn|
       sleep(3) unless current_turn.zero?
@@ -237,7 +239,26 @@ class GameLogic
       puts "\n"
       computer.make_guess
       computer_guess = computer.computer_guess
+      colors_hash = count_number_of_colors_in_hidden_code(hidden_code)
       puts "Computer's guess is #{computer_guess}"
+
+      feedback = compare_player_guess_with_code(computer_guess, hidden_code, colors_hash)
+
+      puts "\n"
+      puts '==============================================================='
+      puts "Exact matches: #{feedback[0]}"
+      puts "Correct color, but wrong position: #{feedback[1]}"
+      puts '==============================================================='
+      puts "\n"
+
+      if feedback[0] + feedback[1] != 0 && computer.colors_found < 4
+        (feedback[0] + feedback[1]).times do
+          computer.colors_in_code[computer_guess.first] += 1
+          computer.colors_found += 1
+        end
+      end
+
+      puts "Colors found in code so far are #{computer.colors_in_code}"
     end
 
     puts "\nThe hidden code was:"
