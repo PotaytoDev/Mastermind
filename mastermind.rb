@@ -1,5 +1,57 @@
 module Validate
   POSSIBLE_COLORS = %w[red blue green purple yellow orange].freeze
+
+  def right_amount_of_colors?(player_guess)
+    player_guess.length == 4
+  end
+
+  def colors_are_possible?(player_guess)
+    player_guess.all? do |color|
+      POSSIBLE_COLORS.include?(color)
+    end
+  end
+
+  def part_of_color_names?(player_guess)
+    player_guess.all? do |color|
+      POSSIBLE_COLORS.any? do |possible_color|
+        possible_color.start_with?(color)
+      end
+    end
+  end
+
+  def transform_input(player_guess)
+    player_guess = player_guess.map { |color| color.downcase }
+
+    # If using any part of the name of a color from the list of possible colors,
+    # substitute that part of the name with the full name of the color that it
+    # represents
+    if part_of_color_names?(player_guess)
+      player_guess.each_with_index do |player_color, player_index|
+        POSSIBLE_COLORS.each_with_index do |possible_color, _possible_index|
+          if possible_color.start_with?(player_color)
+            player_guess[player_index] = possible_color
+            break
+          end
+        end
+      end
+    else
+      player_guess
+    end
+  end
+
+  def validate_player_guess(guess)
+    unless right_amount_of_colors?(guess)
+      puts 'Invalid input. You must enter a total of four colors. Try again:'
+      return false
+    end
+
+    unless colors_are_possible?(guess)
+      puts 'Invalid input. Your must enter colors from the list of possible colors. Try again:'
+      return false
+    end
+
+    true
+  end
 end
 
 class ComputerCodemaker
@@ -41,7 +93,15 @@ class PlayerCodebreaker
     puts "The possible choices are #{POSSIBLE_COLORS}"
     puts "\n"
     puts 'Enter your guess (the name of the four colors, each separated by a space):'
-    @player_guess = gets.chomp.split
+    player_input = gets.chomp.split
+    player_input = transform_input(player_input)
+
+    until validate_player_guess(player_input)
+      player_input = gets.chomp.split
+      player_input = transform_input(player_input)
+    end
+
+    @player_guess = player_input
   end
 end
 
@@ -93,6 +153,7 @@ class GameLogic
       puts "\n"
       player_guess = player.player_guess
       colors_hash = computer.count_number_of_colors_in_hidden_code
+      puts "\nYour guess is: #{player_guess}"
 
       feedback = compare_player_guess_with_code(player_guess, hidden_code, colors_hash)
 
