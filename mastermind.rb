@@ -105,6 +105,29 @@ class PlayerCodebreaker
   end
 end
 
+class PlayerCodemaker
+  include Validate
+
+  attr_reader :hidden_code
+
+  def initialize
+    @hidden_code = make_code
+  end
+
+  def make_code
+    puts 'Enter the code the computer must solve (Four colors each separated by a space):'
+    player_input = gets.chomp.split
+    player_input = transform_input(player_input)
+
+    until validate_player_guess(player_input)
+      player_input = gets.chomp.split
+      player_input = transform_input(player_input)
+    end
+
+    player_input
+  end
+end
+
 class GameLogic
   def compare_player_guess_with_code(player_guess_array, hidden_code, colors_left_to_match)
     exact_matches = 0
@@ -176,7 +199,12 @@ class GameLogic
     puts 'The hidden code was:'
     p hidden_code
   end
+
+  def play_game_as_codemaker
+    player = PlayerCodemaker.new
+    puts "\nThe hidden code you made is #{player.hidden_code}"
+  end
 end
 
 mastermind = GameLogic.new
-mastermind.play_game
+mastermind.play_game_as_codemaker
