@@ -313,6 +313,7 @@ class GameLogic
     puts "You didn't crack the code!" unless player_has_won
     puts "\nThe hidden code was:"
     p hidden_code
+    player_has_won
   end
 
   def play_game_as_codemaker
@@ -370,13 +371,15 @@ class GameLogic
     end
 
     puts "\nThe computer didn't crack the code!" unless computer_has_won
-
     puts "\nThe hidden code was:"
     p player.hidden_code
+    computer_has_won
   end
 end
 
 mastermind = GameLogic.new
+player_score = 0
+computer_score = 0
 
 keep_playing = true
 
@@ -393,10 +396,10 @@ while keep_playing
   loop do
     case gets.chomp.to_i
     when 1
-      mastermind.play_game_as_codebreaker
+      mastermind.play_game_as_codebreaker ? player_score += 1 : computer_score += 1
       break
     when 2
-      mastermind.play_game_as_codemaker
+      mastermind.play_game_as_codemaker ? computer_score += 1 : player_score += 1
       break
     else
       puts 'Invalid input. Choose either 1 or 2.'
@@ -404,6 +407,9 @@ while keep_playing
     end
   end
 
+  puts "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+  puts "\nPlayer score: #{player_score}"
+  puts "Computer score: #{computer_score}"
   puts "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
   print "\nWould you like to play again? (Y/N): "
   loop do
