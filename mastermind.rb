@@ -81,6 +81,12 @@ class ComputerCodebreaker
     @previous_turns_data = {}
   end
 
+  def has_made_guess_before?
+    @previous_turns_data.any? do |_turn_number, turn_data|
+      turn_data[:guess] == @computer_guess
+    end
+  end
+
   def make_guess
     if @colors_to_check.length > 0 && @colors_found != 4
       @computer_guess = @computer_guess.map do
@@ -90,6 +96,9 @@ class ComputerCodebreaker
       @colors_to_check.shift
     else
       @computer_guess = colors_in_code.shuffle
+      while has_made_guess_before?
+        @computer_guess = colors_in_code.shuffle
+      end
     end
   end
 end
@@ -255,6 +264,14 @@ class GameLogic
 
       if computer.colors_found == 4
         computer.previous_turns_data["Turn #{current_turn + 1}"] = { guess: computer_guess, exact: feedback[0] }
+
+        puts "\nData of previous turns is:"
+        computer.previous_turns_data.each do |turn_number, turn_data|
+          puts '-------------'
+          puts turn_number
+          puts "Guess: #{turn_data[:guess]}"
+          puts "Exact: #{turn_data[:exact]}"
+        end
       end
 
       if feedback[0] + feedback[1] != 0 && computer.colors_found < 4
@@ -265,10 +282,8 @@ class GameLogic
         end
       end
 
-      puts "The colors that are part of the code are #{computer.colors_in_code}"
+      puts "\nThe colors that are part of the code are #{computer.colors_in_code}"
       puts "The possible positions of each color are #{computer.possible_positions_of_colors}"
-      puts "\nData of previous turns is:"
-      puts computer.previous_turns_data
 
       if feedback[0] == 4
         puts "\nThe computer solved the code!"
