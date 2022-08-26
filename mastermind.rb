@@ -140,11 +140,13 @@ class ComputerCodebreaker
 
   def make_guess
     if @colors_to_check.length > 0 && @colors_found != 4
+      color_to_check = @colors_to_check.sample
+
       @computer_guess = @computer_guess.map do
-        @colors_to_check.first
+        color_to_check
       end
 
-      @colors_to_check.shift
+      @colors_to_check.delete(color_to_check)
     else
       find_number_of_colors_in_code if @number_of_colors_in_code.empty?
 
