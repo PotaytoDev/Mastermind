@@ -325,7 +325,9 @@ class GameLogic
     puts "\nThe hidden code you made is #{hidden_code}"
 
     number_of_guesses.times do |current_turn|
-      sleep(3) unless current_turn.zero?
+      unless current_turn.zero?
+        computer.colors_found == 4 ? sleep(3) : sleep(1.5)
+      end
       puts '--------------------------------------------------------------'
       puts "\nTurn #{current_turn + 1}"
       puts "\n"
