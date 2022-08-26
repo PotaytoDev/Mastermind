@@ -69,8 +69,10 @@ class ComputerCodemaker
 end
 
 class ComputerCodebreaker
-  attr_accessor :possible_positions_of_colors, :colors_found, :colors_in_code, :previous_turns_data
-  attr_reader :computer_guess
+  attr_accessor :possible_positions_of_colors, :colors_found, :colors_in_code,
+                :previous_turns_data, :two_colors_in_correct_position,
+                :still_checking_for_positions
+  attr_reader :computer_guess, :has_found_two_colors, :number_of_colors_in_code
 
   def initialize
     @computer_guess = Array.new(4)
@@ -79,6 +81,10 @@ class ComputerCodebreaker
     @possible_positions_of_colors = Hash.new { |hash, key| hash[key] = [0, 1, 2, 3] }
     @colors_in_code = []
     @previous_turns_data = {}
+    @two_colors_in_correct_position = false
+    @number_of_colors_in_code = {}
+    @has_found_two_colors = false
+    @still_checking_for_positions = true
   end
 
   def has_made_guess_before?
@@ -92,6 +98,8 @@ class ComputerCodebreaker
 
     if exact_matches.zero?
       @computer_guess.each_with_index do |color, color_index|
+        next unless @colors_in_code.include?(color)
+
         @possible_positions_of_colors[color].delete(color_index)
       end
     end
@@ -99,10 +107,35 @@ class ComputerCodebreaker
 
   def positions_not_possible?
     @computer_guess.each_with_index do |color, color_index|
+      next unless @colors_in_code.include?(color)
+
       return true unless @possible_positions_of_colors[color].include?(color_index)
     end
 
     false
+  end
+
+  def find_number_of_colors_in_code
+    @number_of_colors_in_code = @colors_in_code.reduce(Hash.new(0)) do |hash, color|
+      hash[color] += 1
+      hash
+    end
+  end
+
+  def select_two_colors_to_find
+    first_color = @colors_in_code.sample
+    second_color = @colors_in_code.sample
+    random_color_not_in_code = (Validate::POSSIBLE_COLORS - @colors_in_code).sample
+
+    # Only allow second color to equal first color if there are duplicates of
+    # that color in the hidden code
+    while second_color == first_color && @number_of_colors_in_code[second_color] == 1
+      second_color = @colors_in_code.sample
+    end
+
+    @has_found_two_colors = true
+
+    [first_color, second_color, random_color_not_in_code, random_color_not_in_code]
   end
 
   def make_guess
@@ -113,9 +146,34 @@ class ComputerCodebreaker
 
       @colors_to_check.shift
     else
-      @computer_guess = colors_in_code.shuffle
+      find_number_of_colors_in_code if @number_of_colors_in_code.empty?
+
+      if @two_colors_in_correct_position
+        @computer_guess = colors_in_code
+      else
+        unless @has_found_two_colors
+          @computer_guess = select_two_colors_to_find.shuffle
+        end
+      end
+
       while has_made_guess_before? || positions_not_possible?
-        @computer_guess = colors_in_code.shuffle
+        @computer_guess = @computer_guess.shuffle
+      end
+    end
+  end
+
+  def clear_possible_positions
+    @computer_guess.each_with_index do |color, _color_index|
+      if @colors_in_code.include?(color) && @number_of_colors_in_code[color] == 1
+        @possible_positions_of_colors[color].clear
+      end
+    end
+  end
+
+  def update_correct_positions
+    @computer_guess.each_with_index do |color, color_index|
+      if @colors_in_code.include?(color) && @number_of_colors_in_code[color] == 1
+        @possible_positions_of_colors[color].push(color_index)
       end
     end
   end
@@ -273,6 +331,13 @@ class GameLogic
 
       feedback = compare_player_guess_with_code(computer_guess, hidden_code, colors_hash)
 
+      if feedback[0] == 2 && computer.still_checking_for_positions && computer.has_found_two_colors
+        computer.two_colors_in_correct_position = true
+        computer.still_checking_for_positions = false
+        computer.clear_possible_positions
+        computer.update_correct_positions
+      end
+
       puts "\n"
       puts '==============================================================='
       puts "Exact matches: #{feedback[0]}"
@@ -282,15 +347,6 @@ class GameLogic
 
       if computer.colors_found == 4
         computer.previous_turns_data["Turn #{current_turn + 1}"] = { guess: computer_guess, exact: feedback[0] }
-
-        puts "\nData of previous turns is:"
-        computer.previous_turns_data.each do |turn_number, turn_data|
-          puts '-------------'
-          puts turn_number
-          puts "Guess: #{turn_data[:guess]}"
-          puts "Exact: #{turn_data[:exact]}"
-        end
-
         computer.remove_positions_that_are_not_possible(feedback)
       end
 
@@ -302,11 +358,8 @@ class GameLogic
         end
       end
 
-      puts "\nThe colors that are part of the code are #{computer.colors_in_code}"
-      puts "The possible positions of each color are #{computer.possible_positions_of_colors}"
-
       if feedback[0] == 4
-        puts "\nThe computer solved the code!"
+        puts "\nThe computer solved the code in #{current_turn + 1} turns!"
         computer_has_won = true
         break
       end
