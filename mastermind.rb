@@ -87,6 +87,16 @@ class ComputerCodebreaker
     end
   end
 
+  def remove_positions_that_are_not_possible(feedback)
+    exact_matches = feedback[0]
+
+    if exact_matches.zero?
+      @computer_guess.each_with_index do |color, color_index|
+        @possible_positions_of_colors[color].delete(color_index)
+      end
+    end
+  end
+
   def make_guess
     if @colors_to_check.length > 0 && @colors_found != 4
       @computer_guess = @computer_guess.map do
@@ -272,6 +282,8 @@ class GameLogic
           puts "Guess: #{turn_data[:guess]}"
           puts "Exact: #{turn_data[:exact]}"
         end
+
+        computer.remove_positions_that_are_not_possible(feedback)
       end
 
       if feedback[0] + feedback[1] != 0 && computer.colors_found < 4
@@ -292,7 +304,7 @@ class GameLogic
       end
     end
 
-    "\nThe computer didn't crack the code!" unless computer_has_won
+    puts "\nThe computer didn't crack the code!" unless computer_has_won
 
     puts "\nThe hidden code was:"
     p player.hidden_code
