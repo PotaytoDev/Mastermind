@@ -219,7 +219,9 @@ class PlayerCodemaker
   end
 
   def make_code
-    puts 'Enter the code the computer must solve (Four colors each separated by a space):'
+    puts '--------------------------------------------------------------'
+    puts "\nThe possible choices are #{POSSIBLE_COLORS}"
+    puts "\nEnter the code the computer must solve (Four colors each separated by a space):"
     player_input = gets.chomp.split
     player_input = transform_input(player_input)
 
@@ -274,7 +276,7 @@ class GameLogic
     end
   end
 
-  def play_game
+  def play_game_as_codebreaker
     player = PlayerCodebreaker.new
     computer = ComputerCodemaker.new
     hidden_code = computer.hidden_code
@@ -300,14 +302,14 @@ class GameLogic
 
       if feedback[0] == 4
         puts 'You win!'
+        puts "\nYou solved the code in #{current_turn + 1} turns!"
         player_has_won = true
         break
       end
     end
 
     puts "You didn't crack the code!" unless player_has_won
-    puts "\n"
-    puts 'The hidden code was:'
+    puts "\nThe hidden code was:"
     p hidden_code
   end
 
@@ -373,4 +375,48 @@ class GameLogic
 end
 
 mastermind = GameLogic.new
-mastermind.play_game_as_codemaker
+
+keep_playing = true
+
+puts '------------------------'
+puts "\nWelcome to Mastermind!"
+puts "\n------------------------"
+
+while keep_playing
+  puts 'How would you like to play?'
+  puts "\n1) Play as codebreaker"
+  puts '2) Play as codemaker'
+  print "\nEnter your choice: "
+
+  loop do
+    case gets.chomp.to_i
+    when 1
+      mastermind.play_game_as_codebreaker
+      break
+    when 2
+      mastermind.play_game_as_codemaker
+      break
+    else
+      puts 'Invalid input. Choose either 1 or 2.'
+      print "\nEnter your choice: "
+    end
+  end
+
+  puts "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+  print "\nWould you like to play again? (Y/N): "
+  loop do
+    case gets.chomp.upcase
+    when 'Y'
+      break
+    when 'N'
+      puts "\nGame Over!"
+      puts "\nUntil next time!"
+      puts "\n"
+      keep_playing = false
+      break
+    else
+      puts 'Invalid input. Choose either Y or N.'
+      print 'Would you like to play again? (Y/N): '
+    end
+  end
+end
