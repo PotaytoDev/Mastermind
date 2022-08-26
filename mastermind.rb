@@ -380,6 +380,8 @@ end
 mastermind = GameLogic.new
 player_score = 0
 computer_score = 0
+player_has_won = nil
+computer_has_won = nil
 
 keep_playing = true
 
@@ -391,6 +393,7 @@ while keep_playing
   puts 'How would you like to play?'
   puts "\n1) Play as codebreaker"
   puts '2) Play as codemaker'
+  puts '3) Play full match (as codebreaker and codemaker)'
   print "\nEnter your choice: "
 
   loop do
@@ -401,8 +404,37 @@ while keep_playing
     when 2
       mastermind.play_game_as_codemaker ? computer_score += 1 : player_score += 1
       break
+    when 3
+      player_has_won = false
+      computer_has_won = false
+
+      if [1, 2].sample == 1
+        puts "\n\n\tYou will start the match as the codebreaker!\n\n"
+        player_has_won = mastermind.play_game_as_codebreaker
+        puts "\n\n\tNow you will play as the codemaker!\n\n"
+        computer_has_won = mastermind.play_game_as_codemaker
+      else
+        puts "\n\n\tYou will start the match as the codemaker!\n\n"
+        computer_has_won = mastermind.play_game_as_codemaker
+        puts "\n\n\tNow you will play as the codebreaker!\n\n"
+        player_has_won = mastermind.play_game_as_codebreaker
+      end
+
+      puts "\n\n"
+      if player_has_won == computer_has_won
+        puts "\tGame is a draw!"
+      elsif player_has_won
+        puts "\tYou win! You are the master of minds!"
+        player_score += 1
+      else
+        puts "\tYou lose! Better luck next time!"
+        computer_score += 1
+      end
+
+      puts "\n"
+      break
     else
-      puts 'Invalid input. Choose either 1 or 2.'
+      puts 'Invalid input. Choose 1, 2, or 3'
       print "\nEnter your choice: "
     end
   end
@@ -411,6 +443,7 @@ while keep_playing
   puts "\nPlayer score: #{player_score}"
   puts "Computer score: #{computer_score}"
   puts "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
   print "\nWould you like to play again? (Y/N): "
   loop do
     case gets.chomp.upcase
