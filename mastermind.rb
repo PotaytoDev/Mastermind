@@ -97,6 +97,14 @@ class ComputerCodebreaker
     end
   end
 
+  def positions_not_possible?
+    @computer_guess.each_with_index do |color, color_index|
+      return true unless @possible_positions_of_colors[color].include?(color_index)
+    end
+
+    false
+  end
+
   def make_guess
     if @colors_to_check.length > 0 && @colors_found != 4
       @computer_guess = @computer_guess.map do
@@ -106,7 +114,7 @@ class ComputerCodebreaker
       @colors_to_check.shift
     else
       @computer_guess = colors_in_code.shuffle
-      while has_made_guess_before?
+      while has_made_guess_before? || positions_not_possible?
         @computer_guess = colors_in_code.shuffle
       end
     end
