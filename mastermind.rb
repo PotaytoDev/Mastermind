@@ -69,7 +69,7 @@ class ComputerCodemaker
 end
 
 class ComputerCodebreaker
-  attr_accessor :possible_positions_of_colors, :colors_found, :colors_in_code
+  attr_accessor :possible_positions_of_colors, :colors_found, :colors_in_code, :previous_turns_data
   attr_reader :computer_guess
 
   def initialize
@@ -78,6 +78,7 @@ class ComputerCodebreaker
     @colors_found = 0
     @possible_positions_of_colors = Hash.new { |hash, key| hash[key] = [0, 1, 2, 3] }
     @colors_in_code = []
+    @previous_turns_data = {}
   end
 
   def make_guess
@@ -252,6 +253,10 @@ class GameLogic
       puts '==============================================================='
       puts "\n"
 
+      if computer.colors_found == 4
+        computer.previous_turns_data["Turn #{current_turn + 1}"] = { guess: computer_guess, exact: feedback[0] }
+      end
+
       if feedback[0] + feedback[1] != 0 && computer.colors_found < 4
         (feedback[0] + feedback[1]).times do
           computer.colors_in_code.push(computer_guess.first)
@@ -262,12 +267,17 @@ class GameLogic
 
       puts "The colors that are part of the code are #{computer.colors_in_code}"
       puts "The possible positions of each color are #{computer.possible_positions_of_colors}"
+      puts "\nData of previous turns is:"
+      puts computer.previous_turns_data
 
       if feedback[0] == 4
         puts "\nThe computer solved the code!"
+        computer_has_won = true
         break
       end
     end
+
+    "\nThe computer didn't crack the code!" unless computer_has_won
 
     puts "\nThe hidden code was:"
     p player.hidden_code
